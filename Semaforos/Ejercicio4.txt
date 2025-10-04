@@ -1,0 +1,32 @@
+Suponga que existe una BD que puede ser accedida por 6 usuarios como máximo al mismo tiempo. Además, los usuarios se clasifican como usuarios de prioridad alta y usuarios de prioridad baja. Por último, la BD tiene la siguiente restricción:
+    • no puede haber más de 4 usuarios con prioridad alta al mismo tiempo usando la BD.
+    • no puede haber más de 5 usuarios con prioridad baja al mismo tiempo usando la BD.
+
+Indique si la solución presentada es la más adecuada. Justifique la respuesta
+
+var
+    total: sem := 6;
+    alta: sem := 4;
+    baja: sem := 5;
+
+//Respuesta: en cuanto a acceso, pareceria cumplirse exclusion mutua adecuada cumpliendo con el dominio, sin embargo cada usuario puede hacer 1 solo acceso algo que no esta aclarado, pero si se quisieran mas habia que poner un while(true). *ademas por un tema de eficiencia es mejor liberar primero el recurso especifico y luego el general *
+
+PREGUNTA: sobre * *, esa ineficiencia es un error o no se toma como error?
+
+process Usuario-Alta[I:1-L]::
+{
+    P(total)
+    p(alta)
+    //usa la DB
+    V(total)
+    v(alta)
+}
+
+process Usuario-Baja[I:1-K]::
+{
+    p(total)
+    p(baja)
+    //usa la BD
+    v(total)
+    v(baja)
+}

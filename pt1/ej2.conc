@@ -1,0 +1,34 @@
+/*
+    Realice una solución concurrente de grano grueso (utilizando <> y/o <await B; S>) para el
+    siguiente problema. Dado un número N verifique cuántas veces aparece ese número en un
+    arreglo de longitud M. Escriba las pre-condiciones que considere necesarias
+*/
+
+arrelgo = int [1..M]
+
+int N
+int total = 0
+
+[1,2,3,4,5]
+
+
+// P < M
+
+arreglo = int [0..M]
+int P = 10
+
+Proceso Numero [id:0..P-1]{
+    int suma
+    int cantidad= M/P;
+
+    int limiteInferior= cantidad *id
+    int limSup2 = ((id+1)*cantidad)-1
+
+    int limSup = cantidad + limiteInferior;
+    
+    for (i:limInf; i<limSup;i++) 
+        if(arreglo[i] = N){suma++}
+    <total=total+suma>
+}
+
+

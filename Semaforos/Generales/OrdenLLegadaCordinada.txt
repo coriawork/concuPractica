@@ -1,0 +1,67 @@
+Este codigo define el uso de un recurso de N consumidores, que tienen que respetar un orden de llegada siendos cordinados por un Cordinador que dicen en que orden llegan (Explicacion practica ejercicio 4)
+
+Analisis:
+
+    Consumidor:
+        1. El consumidor i pide exclusion mutua para acceder a la cola
+        2. Encola su ID para que en algun momento lo despierten con ese id
+        3. Aunmenta un Semaforo de cantidad de Consumidores Esperando
+        4. Y se queda esperando a que el semaforo con su ID lo deje pasar
+        5. Luego consume el recurso compartido
+    
+    Cordinador:
+        1. Se queda esperando hasta que haya almenos 1 en espera
+        2. Pide acceso a la cola 
+        3. Obtiene el id del proximo en la cola 
+        4. despierta al proximo esperando 
+
+
+Variables a definir (4):
+    a. Cola para mantener el orden
+    b. Semaforo para indicar si hay alguien en la cola
+    c. Lista de Sem. con la cantidad de consumidores iniciados en 0
+    d. Exclusion mutua para la cola
+
+
+Programa: 
+
+a. Cola C
+b. Sem enEspera = 0
+c. Sem encolados[1..N] = ([N]0)
+d. sem mutex = 1
+
+Process Consumidor[id:1..N]:
+    while(true): // ESTO SOLO SI CADA CONSUMIDOR PUEDE CONSUMIR N VECES
+        1. P(mutex)
+        2. Cola.push(id)
+        V(mutex) // libera el uso de la cola para aumentar concurrencia
+        3. V(enEspera)
+        4. P(encolados[id])
+        5. //Consumir recursos
+
+Process Cordinador:
+    proximo_despertar
+    while(true): // ESTO SOLO SI CADA CONSUMIDOR PUEDE CONSUMIR N VECES
+        1. P(enEspera)
+        2. P(mutex)
+        3. proximo_despertar = cola.pop()
+           V(mutex)
+        4. V(encolados[proximo_despertar])
+
+
+
+// Si no se cumple que cada consumidor puede consumir N veces, se me ocurrio lo siguiente (no sacado de pdf's)
+
+* el consumidor sigue igual *
+
+Process Cordinador:
+    proximo_despertar
+    despertados = 0
+    while(despertados < N): // Finaliza cuando ya todos consumieron 1 vez
+        1. P(enEspera)
+        2. P(mutex)
+        3. proximo_despertar = cola.pop()
+           V(mutex)
+           despertados++ // al cordinador se 1 solo no hace falta mutex
+        4. V(encolados[proximo_despertar])
+

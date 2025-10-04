@@ -1,0 +1,8 @@
+//
+- Semaforo contador
+- Productor/consumidor
+- Orden de llegada con Coordinador 
+- Orden de llegada sin Coordinador -
+- Barrera 
+- Cliente/Servidor
+//

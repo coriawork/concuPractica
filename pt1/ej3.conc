@@ -1,0 +1,55 @@
+Indicar si el siguiente código funciona para resolver el problema de Productor/Consumidor con un buffer de tamaño N. En caso de no funcionar, debe hacer las modificaciones necesarias.
+
+
+//La unica correcion que haria seria que hay que definir el tamaño del buffer a 0..N-1 ya que si fuera 1..N la forma de definir pri_vacia seria otra
+
+int cant = 0; int pri_ocupada = 0; int pri_vacia = 0; int buffer[N];
+Process Productor::
+{ 
+    while (true){ 
+        produce elemento
+        <await (cant < N); cant++>
+        buffer[pri_vacia] = elemento;
+        pri_vacia = (pri_vacia + 1) mod N;
+    }
+}
+Process Consumidor::
+{ 
+    while (true){
+        <await (cant > 0); cant-- >
+        elemento = buffer[pri_ocupada];
+        pri_ocupada = (pri_ocupada + 1) mod N;
+        consume elemento
+    }
+}
+
+// Correccion para : C Consumidor, P Productores
+// Cambie el nombre de las variables para que se entienda mas
+int cant = 0; 
+int buffer[0..N-1];
+int proximo = 0
+int toConsumir = 0
+
+Process Productor::[0..P-1]
+{ 
+    while (true){ 
+        elemento = producir()
+        <await (cant < N);cant++>            
+        <    
+            buffer[proximo] = elemento
+            proximo = proximo + 1 mod N 
+        >
+    }
+}
+
+Process Consumidor::[0..C-1]
+{ 
+    while (true){
+        <await (cant > 0);
+            elemento = buffer[toConsumir];
+            toConsumir = (toConsumir + 1) mod N; 
+            cant--;
+        >
+        consumir(elemento)
+    }
+}

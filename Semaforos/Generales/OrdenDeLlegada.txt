@@ -1,0 +1,61 @@
+//Este codigo define el uso de un recurso de N consumidores, que tienen que respetar un orden de llegada
+
+Analisis:
+    * Se tiene que utilizar una VC para saber si hay alguien usando el recurso ya que no alcanza con saber que la cola esta vacia, por lo que ademas se necesita un semaforo para la vc*
+
+    1. Hace exclusion mutua para hacer uso de la variable compartida Y/O la cola 
+    2. Pregunta si el recurso esta libre o se esta usando
+        2.1. si esta libre, se declara que no esta mas libre (porque sera usado por el consumidor) y libera la exclusion mutua
+        2.2. si esta ocupado, se pone en la cola, libera la exclusion mutua y espera a ser llamado por su id  
+    3. usa el recurso (si sucede esto es o porque era el primero o porque lo llamaron de la cola)
+    4. si hay alguien en la cola lo despierta 
+    5. si no hay nadie ponele el indicador de que el recurso esta libre
+
+    Definicion de variabels: 
+        a. una cola de semaforos para despertar procesos en orden
+        b. una cola para indicar el orden de los ids
+        c. una variable que indique si el recurso esta siendo usado
+        d. un semaforo para proteger por exclusion a la cola y a la variable 
+
+
+Programa:
+
+a. sem semXcola[1..N] = ([N]0) 
+b. cola Cola
+c. bool libre = true 
+d. sem recursosSem = 1 
+
+Process Consumidor [id: 1..N]:
+    while true:
+1.      P(recursosSem)
+2.      if(libre):
+            libre = false
+            V(recursosSem)  
+        else:
+            cola.push(id)
+            V(recursosSem) 
+            P(semXcola[id])
+
+3.      //SE USA EL RECURSO
+            
+        P(recursosSem)
+        if(!cola.empty()):
+4.          V(semXcola[cola.pop()])  
+        else:
+5.          libre = true
+        V(recursosSem)               
+
+
+# Ejemplo donde se tiene que esperar a que el id mas chico use el recurso sucesivamente
+(hay demora inecesaria)
+
+sem Espera[N] = ([N]0) 
+Espera[1] = 1 # Solo el id 1 puede ejecutarse sin que lo llamen
+
+Process Consumidor(id:1..N):
+    P(Espera[id]) # Espero a que mi semaforo este en 1 
+    
+    # Consumir Recurso
+    
+    if(id<N): # Si no soy el ultimo
+        V(Espera[id+1]) # Despierto al siguiente a mi

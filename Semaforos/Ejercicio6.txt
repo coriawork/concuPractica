@@ -1,0 +1,228 @@
+Existen N personas que deben imprimir un trabajo cada una. Resolver cada ítem usando semáforos:
+    a) Implemente una solución suponiendo que existe una única impresora compartida por todas las personas, y las mismas la deben usar de a una persona a la vez, sin importar el orden. Existe una función Imprimir(documento) llamada por la persona que simula el uso de la impresora. Sólo se deben usar los procesos que representan a las Personas.
+    b) Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada.
+    c) Modifique la solución de (a) para el caso en que se deba respetar estrictamente el orden dado por el identificador del proceso (la persona X no puede usar la impresora hasta que no haya terminado de usarla la persona X-1).
+    d) Modifique la solución de (b) para el caso en que además hay un proceso Coordinador que le indica a cada persona que es su turno de usar la impresora.
+    e) Modificar la solución (d) para el caso en que sean 5 impresoras. El coordinador le indica a la persona cuando puede usar una impresora, y cual debe usar.
+
+
+A)
+
+sem impresora = 1 
+
+Process Persona[1..N]::
+    documento
+    P(impresora)
+    imprimir(documento)
+    V(impresora)
+
+B)
+
+# globales
+
+sem mutex = 1 
+cola C
+sem Espera[N]=(0)
+libre = true
+
+Process Persona[id:1..N]::
+    documento  
+    
+    P(mutex)
+    if(libre):
+        libre=false
+    else
+        C.push(id)
+        P(Espera[id])
+    V(mutex)
+
+    imprimir(documento)
+    
+    P(mutex)
+    if(!C.empty()):
+        V(Espera[C.pull()])
+    else
+        Libre = True
+    V(mutex)
+
+C) 
+# Este enunciado tiene demora inecesaria teniendo que esperar cada participante
+
+
+sem Espera[N] = ([N]0)
+Espera[1] = 1
+
+Process persona(id:1..N):
+    documento
+    P(Espera[id])
+    imprimir(documento)
+    if(id<N):
+        V(Espera[id+1])
+
+
+d)
+Sem Espera[N] = ([N]0)
+Sem esperando = 0
+sem semCola = 1
+cola Cola
+
+Process Persona[id: 1..N]:
+    documento
+    P(semCola)
+    cola.push(id)
+    V(semCola)
+    V(esperando)
+    P(Espera[id])
+    imprimir(documento)
+
+Process Cordinador:
+    idSig
+    llegados = 0
+    while(llegados < N):
+        P(Esperando)
+        P(semCola)
+        idSig = Cola.Pop()
+        V(semCola)
+        llegados++
+        V(Espera[idSig])
+
+e)
+Analisis: ademas de lo que tengo en el (D) tengo que ver la cantidad de impresoras disponibles y cuale se le asigna a cada uno
+
+
+
+sem mutexFila = 1
+cola fila
+
+sem Esperando[1..N](0)                      
+sem cantEsperando = 0
+
+int te_toca[1..N](0)
+
+sem mutexImpresoras = 1
+cola impresoras
+sem Cantlibres = 5
+
+sem asignacion[1..N](0)
+
+
+
+Process Persona[id:1..N]:
+
+    # Me agrego a la fila
+    P(mutexFila)
+    fila.push(id)
+    V(mutexFila)
+    
+    # Aumento la cantidad de los que espeeran
+    V(cantEsperando)
+    
+    # Espero mi turno
+    P(Esperando[id])
+    
+    # Espero que se me asigne una impresora
+    P(Asignacion[id])
+    
+    # uso el recurso
+    imprimir(documento,te_toca[id])
+    
+    # Guardo la impresora que ya no uso
+    P(mutexImpresoras)
+    impresoras.push(te_toca[id])
+    V(mutexImpresoras)
+    V(cantLibres) 
+
+Process Cordinador:
+
+    int cantRecibidos = 0
+    int sigId
+    int impLibre
+    while (cantRecibidos < N)
+
+        P(cantEsperando)
+
+        # Obtengo el siguiente en la fila
+        P(mutexFila)
+        sigId = mutexFila.pop()
+        V(mutexFila)
+        
+        # Espera a que haya impresoras libres
+        P(Cantlibres)
+
+        # Obtiene la impresora libre
+        P(mutexImpresoras)
+        impLibre = impresoras.pop()
+        V(mutexImpresoras)
+        
+        # Asigna la impresora
+        te_toca[id] = impLibre
+
+        # Despierto por Asignacion
+        V(asignacion[id])
+
+        # Despierto al que sigue en la fila
+        V(sigId)
+
+        cantRecibidos++
+
+E.2)
+//Podria hacerlo de la siguiente manera? creo que si
+
+* Basicamente aca elimine el uso del estado en el que las personas se quedan esperando a que se les asigna una impresora y se los despierta directamente cuando ya hay una impresora *
+
+var:
+    IDEM
+
+Process Persona[id:1..N]:
+
+    # Me agrego a la fila
+    P(mutexFila)
+    fila.push(id)
+    V(mutexFila)
+    
+    # Aumento la cantidad de los que espeeran
+    V(cantEsperando)
+    
+    # Espero mi turno
+    P(Esperando[id])
+    
+    
+    # uso el recurso
+    imprimir(documento,te_toca[id])
+    
+    # Guardo la impresora que ya no uso
+    P(mutexImpresoras)
+    impresoras.push(te_toca[id])
+    V(mutexImpresoras)
+    V(cantLibres) 
+
+
+Process Cordinador:
+
+    int cantRecibidos = 0
+    int sigId
+    int impLibre
+    while (cantRecibidos < N)
+
+        P(cantEsperando)
+
+        # Obtengo el siguiente en la fila
+        P(mutexFila)
+        sigId = mutexFila.pop()
+        V(mutexFila)
+        
+        # Espera a que haya impresoras libres
+        P(Cantlibres)
+
+        # Obtiene la impresora libre
+        P(mutexImpresoras)
+        impLibre = impresoras.pop()
+        V(mutexImpresoras)
+        
+        # Asigna la impresora
+        te_toca[id] = impLibre
+
+        # Despierto al que sigue en la fila
+        V(Esperando[sigId])
+
+        cantRecibidos++

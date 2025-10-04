@@ -1,0 +1,82 @@
+Un sistema de control cuenta con 4 procesos que realizan chequeos en forma colaborativa. Para ello, reciben el historial de fallos del día anterior (por simplicidad, de tamaño N). De cada fallo, se conoce su número de identificación (ID) y su nivel de gravedad (0=bajo, 1=intermedio, 2=alto, 3=crítico). Resuelva considerando las siguientes situaciones:   
+    a. Se debe imprimir en pantalla los ID de todos los errores críticos (no importa el orden).
+    b. Se debe calcular la cantidad de fallos por nivel de gravedad, debiendo quedar los resultados en un vector global.
+    c. Ídem b. pero cada proceso debe ocuparse de contar los fallos de un nivel de gravedad determinado.
+
+//Solucion:
+
+///ANALISIS:
+    # Procesos: 4
+    # Historial de Fallos Tamaño N, Numero de ID, Nivel de Graveada (0..3), 
+    # al ser una lista deberia checkar que no este vacia y quitar un elemento con excusion mutua
+
+///PROGRAMA
+
+    #globales
+
+    fallos[0..N-1] = (id,gravedad)
+    sem falloSem = 1
+    //inicializado en 0
+    contadorFallos = [0..3](0)
+    sem contadorSem = 1 
+    int sig = 0;
+
+    Process Checker[1..4]:
+        id,gravedad
+        P(falloSem)
+        while(sig < N)
+            id = fallos[sig].id
+            gravedad = fallos[sig].gravedad
+            sig++
+            V(falloSem)
+            if(gravedad = 3):
+                imprimir(id)
+            P(contadorSem)
+            contadorFallos[gravedad]++
+            V(contadorSem)
+            P(falloSem)
+        V(falloSem)
+
+///PROGRAMA punto c
+
+    #globales
+
+    fallos[0..N-1] = (id,gravedad)
+    sem falloSem = 1
+    //inicializado en 0
+    contadorFallos = [0..3](0)
+    sem contadorSem = 1 
+    int sig = 0;
+
+    Process Checker[pid:0..3]:
+        id,gravedad
+        
+        //espero hasta que nadie este usando el arreglo o N
+        P(falloSem)
+        while(sig < N)
+            
+            //obtengo los datos del arreglo
+            id = fallos[sig].id
+            gravedad = fallos[sig].gravedad
+            sig++
+            
+            //Libero el uso para que alguien mas pueda acceder
+            V(falloSem)
+
+            //(no necesito exclusion, cualquier orden)
+            if(gravedad == 3):
+                imprimir(id)
+            
+            //espero a que nadie use el arreglo contador
+            P(contadorSem)
+            if(pid == gravedad):
+                contadorFallos[gravedad]++
+            //Libero el uso del vector contador 
+            V(contadorSem)
+
+            //espero hasta que nadie use el vector de fallos
+            P(falloSem)
+
+        //Libero para el caso en el que no se cumple el while    
+        V(falloSem)
+

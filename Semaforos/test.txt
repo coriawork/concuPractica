@@ -1,0 +1,4 @@
+
+Process A[id: 1..N]::
+    int valor
+    valor = id

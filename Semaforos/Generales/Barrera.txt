@@ -1,0 +1,205 @@
+Este código define el patrón Barrera para sincronizar N procesos. Todos los procesos deben llegar a un punto de sincronización antes de que cualquiera pueda continuar.
+
+Análisis:
+
+    Barrera Simple:
+        1. Cada proceso llega al punto de sincronización
+        2. Se incrementa un contador de procesos que llegaron
+        3. El último proceso en llegar despierta a todos los demás
+        4. Todos los procesos continúan juntos después de la barrera
+    
+    Características:
+        * Se necesita un contador para saber cuántos procesos llegaron
+        * Se necesita exclusión mutua para el contador
+        * Se necesita un semáforo para que los procesos esperen
+        * El último proceso que llega actúa como "liberador" de la barrera
+
+Variables a definir (3):
+    a. Contador de procesos que llegaron al punto de sincronización
+    b. Exclusión mutua para el contador compartido
+    c. Semáforo para que los procesos esperen hasta que todos lleguen
+
+
+
+(Grafica si habria que esperar a 3 autos para poder continuar)
+
+                   _______   Semaforo
+                  |       |---> |        
+                  | Autos |---> | ----> ...
+                  |_______|---> |
+
+
+
+--------------------------------------------------------------------------AFORO AUTO-GESTIONADO
+
+Programa:
+
+a. int llegaron = 0
+b. sem mutex = 1
+c. sem barrera = 0
+ 
+
+
+
+Process Auto[id:1..N]:
+    while(true):
+        # Acciones previas a la barrera
+        delay()
+        
+        # PUNTO DE SINCRONIZACIÓN - BARRERA
+        P(mutex)
+        llegaron++
+        if(llegaron == N):
+            V(barrera)              # El último despierta la barrera
+        V(mutex)
+        
+        P(barrera)                  # Esperar en la barrera
+        V(barrera)                  # Propagar señal a otros procesos
+        
+        # ACCIONES DESPUÉS DE LA BARRERA
+        delay()
+
+--------------------------------------------------------------------------
+# VARIANTE 1: Barrera Reutilizable
+# Esta versión permite usar la barrera múltiples veces
+
+a. int llegaron = 0
+b. sem mutex = 1  
+c. sem barrera = 0
+
+Process Auto[id:1..N]:
+    while(true):
+        # Acciones previas a la barrera
+        delay()
+        
+        # BARRERA
+        P(mutex)
+        llegaron++
+        if(llegaron == N):
+            llegaron = 0            # SET para reutilizar
+            for i = 1 to N:         # Despertar a todos explícitamente
+                V(barrera)
+        V(mutex)
+        
+        P(barrera)                  # Esperar en la barrera
+        
+        # Acciones posteriores a la barrera
+        delay()
+
+--------------------------------------------------------------------------
+VARIANTE 2: Barrera con COORDINADOR Designado
+ # Un proceso específico actúa como coordinador de la barrera
+
+a. int llegaron = 0
+b. sem mutex = 1
+c. sem esperaCoordinador = 0
+d. sem continuarTodos = 0
+
+
+Process Auto[id:1..N]:
+    while(true):
+        # Acciones previas a la barrera
+        delay()
+        
+        # NOTIFICAR LLEGADA
+        P(mutex)
+        llegaron++
+        if(llegaron == N):        # Todos los autos llegaron
+            llegaron = 0            # Reset para siguiente iteración
+            V(esperaCoordinador)    # Despertar al coordinador
+        V(mutex)
+        
+        # ESPERAR AUTORIZACIÓN DEL COORDINADOR
+        P(continuarTodos)
+        
+        # ACCIONES DESPUÉS DE LA BARRERA
+        delay()
+
+
+Process Coordinador:
+    while(true):
+        # TRABAJO DEL COORDINADOR
+        delay()
+
+        # ESPERAR QUE TODOS LLEGUEN
+        P(esperaCoordinador)
+        
+        # LIBERAR A TODOS
+        for i = 1 to (N-1):         # N-1 porque el COORDINADOR no espera
+            V(continuarTodos)
+        
+        # CONTINUAR TRABAJO DEL COORDINADOR
+        delay()
+
+# VARIANTE 3: Barrera con Contador Bidireccional
+# Evita condiciones de carrera en barreras reutilizables
+
+a. int llegaron = 0
+b. int salieron = 0
+c. sem mutex = 1
+d. sem barrera1 = 0
+e. sem barrera2 = 0
+
+Process Auto[id:1..N]:
+    while(true):
+        # Acciones previas a la barrera
+        delay()
+        
+        # PRIMERA FASE: LLEGADA A LA BARRERA
+        P(mutex)
+        llegaron++
+        if(llegaron == N):
+            V(barrera1)
+        V(mutex)
+        
+        P(barrera1)
+        V(barrera1)                 # Propagar a otros
+        
+        # SEGUNDA FASE: SALIDA DE LA BARRERA
+        P(mutex)
+        salieron++
+        if(salieron == N):
+            salieron = 0            # Reset salieron
+            llegaron = 0            # Reset llegaron
+            V(barrera2)
+        V(mutex)
+        
+        P(barrera2)
+        V(barrera2)                 # Propagar a otros
+        
+        # ACCIONES DESPUÉS DE LA BARRERA
+        delay()
+
+# VARIANTE 4: Barrera con Timeout
+# Los procesos pueden abandonar la espera después de un tiempo
+
+a. int llegaron = 0
+b. sem mutex = 1
+c. sem barrera = 0
+d. bool timeout[1..N] = ([N]false)
+
+Process Auto[id:1..N]:
+    while(true):
+        # Acciones previas a la barrera
+        delay()
+        
+        # BARRERA CON TIMEOUT
+        P(mutex)
+        llegaron++
+        if(llegaron == N):
+            V(barrera)
+        V(mutex)
+        
+        # Esperar con timeout (implementación depende del sistema)
+        if(P_timeout(barrera, tiempo_limite)):
+            V(barrera)              # Propagar si no hay timeout
+            timeout[id] = false
+        else:
+            timeout[id] = true      # Marcar timeout
+            P(mutex)
+            llegaron--              # Descontar del total
+            V(mutex)
+        
+        # CONTINUAR SOLO SI NO HAY TIMEOUT
+        if(!timeout[id]):
+            delay()
