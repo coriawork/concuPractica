@@ -38,9 +38,6 @@ Programa:
 a. int llegaron = 0
 b. sem mutex = 1
 c. sem barrera = 0
- 
-
-
 
 Process Auto[id:1..N]:
     while(true):
@@ -131,45 +128,5 @@ Process Coordinador:
             V(continuarTodos)
         
         # CONTINUAR TRABAJO DEL COORDINADOR
-        delay()
-____________________________________________________________
-VARIANTE 3: Barrera con Contador Bidireccional
-
-# Evita condiciones de carrera en barreras reutilizables
-
-a. int llegaron = 0
-b. int salieron = 0
-c. sem mutex = 1
-d. sem barrera1 = 0
-e. sem barrera2 = 0
-
-Process Auto[id:1..N]:
-    while(true):
-        # Acciones previas a la barrera
-        delay()
-        
-        # PRIMERA FASE: LLEGADA A LA BARRERA
-        P(mutex)
-        llegaron++
-        if(llegaron == N):
-            V(barrera1)
-        V(mutex)
-        
-        P(barrera1)
-        V(barrera1)                 # Propagar a otros
-        
-        # SEGUNDA FASE: SALIDA DE LA BARRERA
-        P(mutex)
-        salieron++
-        if(salieron == N):
-            salieron = 0            # Reset salieron
-            llegaron = 0            # Reset llegaron
-            V(barrera2)
-        V(mutex)
-        
-        P(barrera2)
-        V(barrera2)                 # Propagar a otros
-        
-        # ACCIONES DESPUÉS DE LA BARRERA
         delay()
 ____________________________________________________________
