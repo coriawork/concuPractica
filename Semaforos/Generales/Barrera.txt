@@ -30,7 +30,8 @@ Variables a definir (3):
 
 
 
---------------------------------------------------------------------------AFORO AUTO-GESTIONADO
+____________________________________________________________
+SEMAFORO AUTO-GESTIONADO
 
 Programa:
 
@@ -59,8 +60,9 @@ Process Auto[id:1..N]:
         # ACCIONES DESPUÉS DE LA BARRERA
         delay()
 
---------------------------------------------------------------------------
-# VARIANTE 1: Barrera Reutilizable
+____________________________________________________________
+VARIANTE 1: Barrera Reutilizable
+
 # Esta versión permite usar la barrera múltiples veces
 
 a. int llegaron = 0
@@ -85,10 +87,10 @@ Process Auto[id:1..N]:
         
         # Acciones posteriores a la barrera
         delay()
-
---------------------------------------------------------------------------
+____________________________________________________________
 VARIANTE 2: Barrera con COORDINADOR Designado
- # Un proceso específico actúa como coordinador de la barrera
+ 
+# Un proceso específico actúa como coordinador de la barrera
 
 a. int llegaron = 0
 b. sem mutex = 1
@@ -125,13 +127,14 @@ Process Coordinador:
         P(esperaCoordinador)
         
         # LIBERAR A TODOS
-        for i = 1 to (N-1):         # N-1 porque el COORDINADOR no espera
+        for i = 1 to (N):         # N porque el COORDINADOR no espera
             V(continuarTodos)
         
         # CONTINUAR TRABAJO DEL COORDINADOR
         delay()
+____________________________________________________________
+VARIANTE 3: Barrera con Contador Bidireccional
 
-# VARIANTE 3: Barrera con Contador Bidireccional
 # Evita condiciones de carrera en barreras reutilizables
 
 a. int llegaron = 0
@@ -169,37 +172,4 @@ Process Auto[id:1..N]:
         
         # ACCIONES DESPUÉS DE LA BARRERA
         delay()
-
-# VARIANTE 4: Barrera con Timeout
-# Los procesos pueden abandonar la espera después de un tiempo
-
-a. int llegaron = 0
-b. sem mutex = 1
-c. sem barrera = 0
-d. bool timeout[1..N] = ([N]false)
-
-Process Auto[id:1..N]:
-    while(true):
-        # Acciones previas a la barrera
-        delay()
-        
-        # BARRERA CON TIMEOUT
-        P(mutex)
-        llegaron++
-        if(llegaron == N):
-            V(barrera)
-        V(mutex)
-        
-        # Esperar con timeout (implementación depende del sistema)
-        if(P_timeout(barrera, tiempo_limite)):
-            V(barrera)              # Propagar si no hay timeout
-            timeout[id] = false
-        else:
-            timeout[id] = true      # Marcar timeout
-            P(mutex)
-            llegaron--              # Descontar del total
-            V(mutex)
-        
-        # CONTINUAR SOLO SI NO HAY TIMEOUT
-        if(!timeout[id]):
-            delay()
+____________________________________________________________
