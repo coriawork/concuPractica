@@ -1,0 +1,81 @@
+Parcial Práctico de MC - Primera Fecha - 10/10/2023 - Tema 1
+
+Resolver con SEMÁFOROS los problemas siguientes:
+
+a) En una estación de trenes, asisten P personas que deben realizar una carga de su tarjeta SUBE en la terminal disponible. La terminal es utilizada en forma exclusiva por cada persona de acuerdo con el orden de llegada. Implemente una solución utilizando únicamente procesos Persona. Nota: la función UsarTerminal() le permite cargar la SUBE en la terminal disponible.
+
+b) Resuelva el mismo problema anterior pero ahora considerando que hay T terminales disponibles. Las personas realizan una única fila y la carga la realizan en la primera terminal que se libera. Recuerde que solo debe emplear procesos Persona. Nota: la función UsarTerminal(t) le permite cargar la SUBE en la terminal t.
+
+A)
+
+bool terminalLibre = true # Esto es para no asumir que por que la fila este vacia vamos a pasar
+sem Mutexterminal = 1
+
+sem espera[1..P](0)
+
+cola fila
+
+
+process Personas [id:1..P]::
+    int sig
+
+    P(Mutexterminal)
+    if(!libre)
+        espera.push(id)
+        V(Mutexterminal)
+        P(espera[id])
+    else
+        V(Mutexterminal)
+    
+    UsarTerminal()
+
+    P(Mutexterminal)
+    if(!espera.empty())
+        sig = espera.pop()
+        V(Mutexterminal)
+        V(espera[sig])
+    else
+        libre = true
+        V(Mutexterminal)
+
+
+
+B)  # Esto esta estructuralmente bien pero creo que Falta una cola
+
+sem espera[1..P](0)
+
+cola fila
+sem mutexFila = 1
+
+int cantLibre = T
+
+
+sem mutexCantLibre = 1
+
+process Personas[id 1..P]::
+    int Terminal
+    int sig
+
+    P(mutexCantLibre)
+    if(cantLibre > 0)
+        terminal = cantLibre
+        cantLibre--
+        V(mutexCantLibre)
+    else
+        V(mutexCantLibre)
+        P(mutexFila)
+        espera.push(id)
+        V(mutexFila)
+        P(espera[id])
+
+    UsarTerminal(T)    
+
+    P(mutexFila)
+    if(!espera.empty())
+        sig = espera.pop()
+        V(mutexFila)
+        V(espera[sig])
+    else   
+        P(mutexCantLibre)
+        cantLibre++
+        V(mutexCantLibre)
