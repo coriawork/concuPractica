@@ -1,0 +1,54 @@
+Una fábrica de piezas metálicas debe producir T piezas por día. Para eso, cuenta con E
+empleados que se ocupan de producir las piezas de a una por vez. La fábrica empieza a
+producir una vez que todos los empleados llegaron. Mientras haya piezas por fabricar, los empleados tomarán una y la realizarán. Cada empleado puede tardar distinto tiempo en fabricar una pieza. Al finalizar el día, se debe conocer cual es el empleado que más piezas
+fabricó.
+a) Implemente una solución asumiendo que T > E.
+b) Implemente una solución que contemple cualquier valor de T y E.
+
+Analisis:
+    1. tengo que hacer una barrera para que los empleados comiencen a producir todos juntos
+
+cantPiezas = T
+
+sem mutexPieza = 1
+
+int Llegaron = 0
+
+Sem Barrera = 0
+sem mutexBarrera = 1
+
+int maximo = 0
+int idMaximo 
+sem mutexMaximo = 1
+
+
+# Empleados 
+
+process Empleados[id: 1..E]::
+    int fabrique =0
+    #tienen que presentarse todos
+    P(mutexBarrera)
+    Llegaron++
+
+    if(Llegaron = E)
+        V(Barrera)
+    V(mutexBarrera)
+
+    P(Barrera)
+    V(Barrera)
+    # Ya estan todos
+
+    P(mutexPieza) 
+    While(cantPiezas > 0 )
+        cantPiezas--
+        V(mutexPieza)
+        producirPieza()
+        fabrique++
+        P(mutexPieza)
+    V(mutexPieza)
+    
+    P(mutexMaximo)  
+    if(fabrique > maximo)
+        maximo = fabrique
+        idMaximo = id
+    V(mutexMaximo)
