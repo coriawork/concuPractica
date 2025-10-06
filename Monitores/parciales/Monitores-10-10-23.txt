@@ -1,0 +1,38 @@
+resolver con MONITORES el siguiente problema. En una elección estudiantil, se utiliza una máquina para voto electrónico. Existen N Personas que votan y una Autoridad de Mesa que les da acceso a la máquina de acuerdo con el orden de llegada, aunque ancianos y embarazadas tienen prioridad sobre el resto. La máquina de voto sólo puede ser usada por una persona a la vez. Nota: la función Votar() permite usar la máquina.
+
+
+Personas[id:1..N]
+
+
+    EsperarVotar(id,edad,embarazada)
+    Votar()
+    Salir()
+
+Monitor AutoridadMesa
+
+    bool libre = true
+    cond espera[1..N]
+    cola fila
+    int en_espera = 0
+
+    EsperarVotar(int id, int edad, bool embarazada)
+
+        if(libre){
+            libre = false
+        }else{
+            fila.insertar(id,edad,embarazada) # Inserta si es al principio de la fila en caso de ser mayor o embarazada
+            en_espera++
+            wait(espera[id])
+        }
+    
+    salir(id)
+        if(en_espera > 0)
+            signal(espera[id])
+            en_espera--
+        else
+            libre = false
+
+
+    
+
+

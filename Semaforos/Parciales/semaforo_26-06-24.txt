@@ -1,0 +1,56 @@
+Programación Concurrente ATIC/Redictado Programación Concurrente - Segunda fecha de MC - 26/06/2024
+
+1. Resolver con SEMÁFOROS el siguiente problema. En una planta verificadora de vehículos existe un puesto de atención para atender a 20 vehículos que deben hacer su verificación. En el puesto de atención hay un empleado que atiende a los vehículos de acuerdo con el orden de llegada, realiza la verificación y le entrega el comprobante; luego espera que el vehículo abandone el puesto para poder atender al siguiente. Nota: existe la función verificar(ID) que simula que el empleado está verificando al vehículo ID ; 
+todos los procesos deben terminar.
+
+Analisis: Voy a hacer uso de los patrones: Productor/Consumidor y Manejo de Orden de llegada con cordinador
+
+
+Cola fila
+sem mutexFila = 1
+
+sem espera[1..20](0)
+
+Comprobante comprobantes [1..20] 
+
+
+sem esperando = 0
+
+sem puestoEspera = 0 
+
+
+Process Vehiculos[id:1..20]::
+
+    comprobante
+    
+    P(mutexFila)
+    fila.push(id)
+    V(mutexFila)
+    V(esperando)
+    P(espera[id])
+    
+    comprobante = comprobantes[id]
+
+    //analiza el comprobante y se prepara para irse
+
+    V(puestoEspera)
+
+Process Puesto::   
+    atendi = 0
+    vehiculo
+
+    while (atendi < 20)
+        P(esperando)
+
+        P(mutexFila)
+        vehículo = fila.pop()
+        V(mutexFila)
+
+        verificar(vehiculo)
+        
+        comprobantes[vehículo] = generar(comprobante)
+
+        V(espera[vehiculo])
+
+        P(puestoEspera)
+        atendi++

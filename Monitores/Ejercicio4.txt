@@ -1,0 +1,36 @@
+Existen N vehículos que deben pasar por un puente de acuerdo con el orden de llegada.
+Considere que el puente no soporta más de 50000kg y que cada vehículo cuenta con su propio
+peso (ningún vehículo supera el peso soportado por el puente). 
+
+Process Auto[id: 0..N-1] {
+    int peso;
+    Puente.Entrar(id, peso);
+    PasarPorPuente();
+    Puente.Salir(id, peso);
+}
+
+Monitor Puente {
+    int peso_total = 0, autos_esperando = 0;
+    cond autos_en_espera[N];
+    queue fila_autos;
+
+    procedure Entrar(id_auto, peso_auto: in int) {
+        if (peso_total + peso_auto > 50000) {
+            push(fila_autos, id_auto);
+            autos_esperando++;
+            wait(autos_en_espera[id_auto]);
+        } else {
+            peso_total += peso_auto;
+        }
+    }
+
+    procedure Salir(id_auto, peso_auto: in int) {
+        peso_total -= peso_auto;
+        if (autos_esperando > 0) {
+            int auto_en_fila;
+            pop(fila_autos, auto_en_fila);
+            autos_esperando--;
+            signal(autos_en_espera[auto_en_fila]);
+        }
+    }
+}

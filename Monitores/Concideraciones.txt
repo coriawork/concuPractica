@@ -1,0 +1,76 @@
+CONSIDERACIONES PARA RESOLVER LOS EJERCICIOS:
+
+    • Los monitores utilizan el protocolo signal and continue.
+    • A una variable condition SÓLO pueden aplicársele las operaciones SIGNAL, SIGNALALL y WAIT.
+    • NO puede utilizarse el wait con prioridades.
+    • NO se puede utilizar ninguna operación que determine la cantidad de procesos encolados en una variable condition o si está vacía.
+    • La única forma de comunicar datos entre monitores o entre un proceso y un monitor es por medio de invocaciones al procedimiento del monitor del cual se quieren obtener (o enviar) los datos.
+    • No existen variables globales.
+    • En todos los ejercicios debe maximizarse la concurrencia.
+    • En todos los ejercicios debe aprovecharse al máximo la característica de exclusión mutua que brindan los monitores.
+    • Debe evitarse hacer busy waiting.
+    • En todos los ejercicios el tiempo debe representarse con la función delay
+
+___________________________________________________________________
+
+ESTRUCTURA Y COMUNICACION
+
+    • No existen las variables compartidas.
+    • Las variables permanentes del monitor sólo se pueden usar dentro del monitor.
+    • Si el monitor tiene un código de inicialización, hasta que este no termine su ejecución el monitor no atiende llamados a los procedures.
+    • Los procesos interactúan entre ellos y con los recursos compartidos por medio de los monitores haciendo llamados a los Procedures de estos.
+    • En un procedimiento de un monitor TAMBIÉN se puede llamar a procedimientos de OTRO monitor. Pero cuidado porque el monitor desde donde se hizo el llamado se mantiene ocupado (inaccesible por otro proceso) hasta que el procedimiento llamado en el segundo monitor TERMINE POR COMPLETO su ejecución.
+    • Cuando el monitor está libre TODOS los procesos que están haciendo llamados a sus procedimientos compiten por acceder al monitor, NO acceden de acuerdo al orden de llegada
+
+Sintaxis:
+
+    Monitor Nombre{
+        Variables permanentes al monitor
+
+        Procedure uno()::
+            var locales
+        {
+            ...
+        }
+
+        codigo de inicialización del monitor 
+
+        {
+            inicializacion de variables
+        }
+    }
+
+    Process P[id: 1..N]::
+        Nombre.uno()
+___________________________________________________________________
+
+SINCRONIZACION :
+
+    •La Exclusión Mutua es implícita dentro de un monitor al no poder ejecutar más de un llamado a un procedimiento a la vez, hasta que no se termina el procedure o no se duerme en una variable condition no se libera el monitor para atender otro llamado.
+    • La Sincronización por Condición es explícita por medio de variables Conditions usadas en los
+    monitores. Son variables permanentes del monitor (sólo se pueden usar en el monitor que fueron declaradas):
+        • wait (vc): duerme al proceso en la cola asociada a la variable condición (al final de la cola).
+        • Signal (vc): despierta al primer proceso dormido en vc (al primero que se había dormido) para que compita nuevamente para acceder al monitor, y cuando lo haga continuar con la instrucción después del wait. 
+        • Signal_all (vc): despierta a todos los procesos dormidos en vc para que todos pasen a competir por acceder nuevamente al monitor. 
+
+    SINTAXIS:
+
+    Monitor nombre{
+        cond vc 
+
+        Procedure Uno(){
+            ...
+            wait(vc)
+            ...
+        }
+
+
+        Procedure Dos(){
+            ...
+            signal(vc)
+            ...
+            Signal_all(vc)
+        }
+
+
+    }

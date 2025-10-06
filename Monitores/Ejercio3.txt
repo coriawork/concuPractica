@@ -1,0 +1,134 @@
+Existen N personas que deben fotocopiar un documento. La fotocopiadora sólo puede ser
+usada por una persona a la vez. Analice el problema y defina qué procesos, recursos y
+monitores serán necesarios/convenientes, además de las posibles sincronizaciones requeridas
+para resolver el problema. Luego, resuelva considerando las siguientes situaciones:
+
+    a) Implemente una solución suponiendo no importa el orden de uso. Existe una funciónFotocopiar() que simula el uso de la fotocopiadora.
+    b) Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada.
+    c) Modifique la solución de (b) para el caso en que se deba dar prioridad de acuerdo con la edad de cada persona (cuando la fotocopiadora está libre la debe usar la persona de mayor edad entre las que estén esperando para usarla).
+    d) Modifique la solución de (a) para el caso en que se deba respetar estrictamente el orden dado por el identificador del proceso (la persona X no puede usar la fotocopiadora hasta que no haya terminado de usarla la persona X-1).
+    e) Modifique la solución de (b) para el caso en que además haya un Empleado que le indica a cada persona cuando debe usar la fotocopiadora.
+    f) Modificar la solución (e) para el caso en que sean 10 fotocopiadoras. El empleado le indica
+    a la persona cuál fotocopiadora usar y cuándo hacerlo.
+
+A)
+
+Process Persona[1..N]
+    Manager.ingresar()
+    funciónFotocopiar() # lo dejo afuera del monitor para aumentar concurrencia
+    Manager.salir()
+
+Monitor Manager
+    cond cola 
+    bool libre = true
+
+    procedure ingresar()
+        #se necesita un while por si otro toma el monitor en vez de el levantado (entonces podria haber dos procesos usando el recurso) debido a que el wait levanta desde el punto donde se durmio
+        while(!libre) wait(cola) 
+        libre = false
+    
+    procedure salir()
+        libre = true
+        signal(cola)
+
+B) 
+
+//persona idem
+
+Monitor Manager
+    cond cola 
+    bool libre = true
+    int esperando = 0 # se agrega la cantidad en espera para que al salir no poner el libre en true si hay alguien esperando 
+
+    procedure ingresar()
+        if(!libre)
+            esperando++
+            wait(cola)
+        else    
+            libre = false
+
+    procedure salir()
+        if(esperando > 0 )
+            esperando--
+            signal(cola)
+        else
+            libre = true
+
+
+C) # necesito agregar una cola ordenada
+
+# (el insertar agrega al principio de la cola en caso de ser una persona anciana y sino al final)
+
+Monitor Manager()
+    cond espera [N] # le digo explicitamente a quien levantar
+    bool libre = true
+    int esperando = 0
+    colaOrdenada fila
+    int idAux
+
+    procedure ingresar(int idP,int edad)
+        if(!libre)
+            fila.insertar(idP,edad)
+            esperando++
+            idAux = idP        
+            wait(espera[idAux])
+        else
+            libre = false
+    
+    procedure salir()
+        if(esperando > 0)
+            esperando--
+            fila.saca(idAux)
+            signal(espera[idAux])
+        else
+            libre = true
+
+Process persona[id: 1..N]
+    Manager.ingresar(id,edad)
+    funciónFotocopiar() 
+    Manager.salir()
+
+E)
+Process Persona[id: 1..N]
+    Manager.llegar(id)
+    Manager.esperar(id)  // Espera autorización del empleado
+    funcionFotocopiar()
+    Manager.salir()
+
+Process Empleado
+    while(true)
+        Manager.autorizar()
+
+Monitor Manager
+    bool ocupado = false
+    queue cola
+    cond esperando[N]
+    cond empleado_esperando
+    int cantEsperando = 0
+    bool hayPersonas = false
+
+    procedure llegar(int id)
+        cola.push(id)
+        cantEsperando++
+        hayPersonas = true
+        signal(empleado_esperando)  // Avisa al empleado que hay alguien
+
+    procedure esperar(int id)
+        wait(esperando[id])  // Espera autorización específica
+        ocupado = true
+
+    procedure salir()
+        ocupado = false
+        if(cantEsperando > 0)
+            signal(empleado_esperando)  // Avisa al empleado que puede autorizar
+
+    procedure autorizar()
+        if(!hayPersonas)
+            wait(empleado_esperando)
+        
+        if(cantEsperando > 0 && !ocupado)
+            int id = cola.pop()
+            cantEsperando--
+            if(cantEsperando == 0)
+                hayPersonas = false
+            signal(esperando[id])  // Autoriza a la persona específica
